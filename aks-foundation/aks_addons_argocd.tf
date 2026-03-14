@@ -106,14 +106,14 @@ resource "kubectl_manifest" "argocd_project_addons" {
 # }
 
 ################################################################################
-# ArgoCD Repository - GitOps
+# ArgoCD Repository - addons
 ################################################################################
-resource "kubectl_manifest" "argocd_repo_gitops" {
+resource "kubectl_manifest" "argocd_repo_addons" {
   yaml_body  = <<-EOF
     apiVersion: v1
     kind: Secret
     metadata:
-      name: repo-gitops
+      name: repo-addons
       namespace: ${local.namespaces.devops}
       labels:
         argocd.argoproj.io/secret-type: repository
@@ -122,20 +122,20 @@ resource "kubectl_manifest" "argocd_repo_gitops" {
     type: Opaque
     stringData:
       type: git
-      url: https://github.com/lurodrisilva/gitops.git
+      url: https://github.com/lurodrisilva/plat-eng-baseline-addons.git
   EOF
   depends_on = [helm_release.argocd]
 }
 
 ################################################################################
-# ArgoCD Application - GitOps
+# ArgoCD Application - addons
 ################################################################################
-resource "kubectl_manifest" "argocd_app_gitops" {
+resource "kubectl_manifest" "argocd_app_addons" {
   yaml_body  = <<-EOF
     apiVersion: argoproj.io/v1alpha1
     kind: Application
     metadata:
-      name: gitops
+      name: baseline-addons
       namespace: ${local.namespaces.control_plane}
     spec:
       project: addons-project
@@ -154,7 +154,7 @@ resource "kubectl_manifest" "argocd_app_gitops" {
           - CreateNamespace=true
           - ApplyOutOfSyncOnly=true       # only apply out-of-sync resources
   EOF
-  depends_on = [kubectl_manifest.argocd_repo_gitops, kubectl_manifest.argocd_project_addons]
+  depends_on = [kubectl_manifest.argocd_repo_addons, kubectl_manifest.argocd_project_addons]
 }
 
 # resource "kubectl_manifest" "argocd_repo_helm_charts" {
