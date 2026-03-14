@@ -6,7 +6,7 @@ A production-ready Azure Kubernetes Service (AKS) infrastructure with Crossplane
 
 ```bash
 # Clone and navigate to the project
-cd 01-aks-tf
+cd 03-plat-eng-aks-foundation
 
 # Initialize and deploy
 make init ENV=dev
@@ -43,8 +43,9 @@ For detailed setup instructions, see the [Quickstart Guide](docs/setup/quickstar
   - Public endpoint with Azure Public IP
   - DNS: `luciano-argocd.eastus.cloudapp.azure.com`
 - **Crossplane**: Cloud-native control plane
-  - Azure Workload Identity integration
-  - Provider family for Azure resources
+  - Azure AD Service Principal authentication
+  - Provider Family Azure and Provider Azure Cache
+- **Azure Service Operator (ASO)**: Cloud-native Azure resource management (v2.17.0)
 - **Vault**: Secrets management (HashiCorp Vault)
 
 ### Operations
@@ -65,19 +66,20 @@ This project implements a modern cloud-native platform on Azure:
 │  │                    AKS Cluster                             │ │
 │  │                                                            │ │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │ │
-│  │  │   ArgoCD     │  │  Crossplane  │  │    Vault     │      │ │
+│  │  │   ArgoCD     │  │ Crossplane+ASO│  │    Vault     │      │ │
 │  │  │ devops-system│  │resources-sys │  │ devops-system│      │ │
 │  │  └──────────────┘  └──────────────┘  └──────────────┘      │ │
 │  │                                                            │ │
 │  │  ┌──────────────────────────────────────────────────────┐  │ │
 │  │  │              Application Namespaces                  │  │ │
-│  │  │  gateway • observability • pipeline • security       │  │ │
+│  │  │ jarvix • gateway • observability • pipeline • security │  │ │
+│  │  │            test • storage • ai                       │  │ │
 │  │  └──────────────────────────────────────────────────────┘  │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │  ┌───────────────┐  ┌────────────────-─┐  ┌─────────────────┐   │
-│  │   Public IP   │  │  Managed Identity│  │  Log Analytics  │   │
-│  │   (ArgoCD)    │  │   (Crossplane)   │  │   Workspace     │   │
+│  │   Public IP   │  │ Service Principal│  │  Log Analytics  │   │
+│  │   (ArgoCD)    │  │(Crossplane + ASO)│  │   Workspace     │   │
 │  └───────────────┘  └─────────────────-┘  └─────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -89,7 +91,7 @@ For detailed architecture documentation, see:
 ## 📦 Prerequisites
 
 - **Azure CLI**: Authenticated with appropriate subscription
-- **Terraform**: >= 1.0
+- **Terraform**: >= 1.3
 - **kubectl**: For Kubernetes cluster management
 - **make**: For using Makefile commands
 - **Azure Subscription**: With contributor permissions
@@ -121,9 +123,12 @@ export ARM_SUBSCRIPTION_ID="your-subscription-id"
 ## 📁 Project Structure
 
 ```
-01-aks-tf/
+03-plat-eng-aks-foundation/
 ├── README.md                      # This file
 ├── makefile                       # Infrastructure management commands
+├── .devcontainer/                 # Dev container configuration
+├── .github/                       # CI/CD workflows
+├── .checkov_config.yaml           # Checkov configuration
 ├── docs/                          # Documentation
 │   ├── setup/                     # Setup and installation guides
 │   │   └── quickstart.md
@@ -143,11 +148,18 @@ export ARM_SUBSCRIPTION_ID="your-subscription-id"
 │   ├── aks_addons_argocd.tf      # ArgoCD Helm installation
 │   ├── aks_cluster_namespaces.tf # Kubernetes namespaces
 │   ├── argocd_public_ingress.tf  # ArgoCD public endpoint
+│   ├── aso_argocd.tf             # Azure Service Operator deployment
 │   ├── crossplane_*.tf           # Crossplane configuration
+│   ├── crossplane_managed_resources.tf
+│   ├── extra_node_pool.tf
+│   ├── role_assignments.tf
+│   ├── locals.tf
+│   ├── providers.tf
+│   ├── versions.tf
+│   ├── log_analytics.tf
 │   ├── vault.tf                   # Vault installation
+│   ├── unit-test-fixture/         # Unit test fixtures
 │   └── ...                        # Additional configuration files
-├── import-existing-cluster.sh     # Script to import existing cluster
-└── verify-namespace-update.sh     # Namespace verification script
 ```
 
 ## ⚡ Quick Reference
@@ -199,7 +211,7 @@ terraform -chdir=./aks-foundation output
 
 # Specific outputs
 terraform -chdir=./aks-foundation output argocd_public_fqdn
-terraform -chdir=./aks-foundation output crossplane_identity_client_id
+terraform -chdir=./aks-foundation output crossplane_identity_client_id # App Registration Client ID
 terraform -chdir=./aks-foundation output aks_name
 ```
 
@@ -217,10 +229,10 @@ resource_group_name = "aks-test-rg"
 # AKS Configuration
 kubernetes_version = "1.34"
 agents_count = 3
-agents_size = "Standard_D4s_v3"
+agents_size = "Standard_D2s_v3"
 
 # Crossplane
-crossplane_version = "1.18.4"
+crossplane_version = "2.1.3"
 crossplane_provider_family_azure_version = "v2.3.0"
 
 # ArgoCD
@@ -234,7 +246,7 @@ crossplane_provider_family_azure_version = "v2.3.0"
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd 01-aks-tf
+   cd 03-plat-eng-aks-foundation
    ```
 
 2. **Set up Azure authentication**
@@ -270,7 +282,7 @@ checkov -d aks-foundation/
 
 ## 🔐 Security Considerations
 
-- **Workload Identity**: Crossplane uses Azure Workload Identity (no secrets in cluster)
+- **Service Principal**: Crossplane and ASO use Azure AD Service Principal with client secret stored as Kubernetes Secret
 - **RBAC**: Kubernetes RBAC enabled with Azure AD integration
 - **Network Policies**: Configure as needed for your security requirements
 - **Secrets Management**: Vault for application secrets
