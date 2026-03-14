@@ -1,37 +1,31 @@
 # Crossplane Configuration for AKS
 
-This Terraform configuration deploys Crossplane on Azure Kubernetes Service (AKS) with Azure Workload Identity authentication.
+This Terraform configuration deploys Crossplane on Azure Kubernetes Service (AKS) with Azure Service Principal authentication.
 
 ## Architecture Overview
 
 The implementation consists of:
 
 1. **Azure Infrastructure** (`crossplane_infrastructure.tf`):
-   - Resource Group: `aks-control-plane` with specific tags
-   - User-Assigned Managed Identity: `crossplane-identity`
-   - Federated Identity Credential with wildcard pattern for all provider service accounts
+   - Azure AD App Registration: `azure-operators-sp`
+   - Service Principal: Created from app registration with Contributor role
    - Subscription-level Contributor role assignment
 
 2. **Kubernetes Resources** (`crossplane_argocd.tf`):
    - ArgoCD Application for Crossplane installation
    - Provider installations (provider-family-azure, provider-azure-cache)
-   - DeploymentRuntimeConfig for workload identity
-   - ProviderConfig for Azure authentication
-   - Kubernetes Secret with credentials backup
+   - ClusterProviderConfig for Azure authentication using Secret credentials
+   - Kubernetes Secret with JSON credentials
 
 ## Resources Created
 
 ### Azure Resources
 
-- **Resource Group**: `aks-control-plane`
-  - Tags: Owner, xp-cost-allocation, AMBIENTE, BASELINE, managed-by
-  
-- **Managed Identity**: `crossplane-identity`
+- **App Registration**: `azure-operators-sp`
+  - Azure AD application used as the identity for Crossplane and ASO
+
+- **Service Principal**: Created from app registration with Contributor role
   - Permissions: Contributor role at subscription level
-  
-- **Federated Identity Credential**: `crossplane-all-providers`
-  - Subject: `system:serviceaccount:resources-system:*`
-  - Audience: `api://AzureADTokenExchange`
 
 ### Kubernetes Resources
 
@@ -39,28 +33,27 @@ All resources are deployed in the `resources-system` namespace:
 
 - **ArgoCD Application**: `crossplane`
   - Helm chart from Crossplane stable repository
-  - Version controlled via `var.crossplane_version`
-  
+  - Chart version `2.1.3` (hardcoded in ArgoCD manifest)
+
 - **Providers**:
   - `upbound-provider-family-azure` (version from `var.crossplane_provider_family_azure_version`)
   - `provider-redis-azure` (version from `var.crossplane_provider_azure_cache_version`)
-  
-- **DeploymentRuntimeConfig**: `crossplane-runtime-config`
-  - Configures service accounts with workload identity annotations
-  - Adds pod labels for workload identity webhook
-  
-- **ProviderConfig**: `default`
-  - Uses OIDCTokenFile authentication
-  - Configured with managed identity client ID
-  
+
+- **ClusterProviderConfig**: `default`
+  - Uses Secret source for authentication
+  - References `azure-crossplane-credentials` secret
+
 - **Secret**: `azure-crossplane-credentials`
-  - Stores CLIENT_ID, SUBSCRIPTION_ID, TENANT_ID
+  - Stores JSON credentials: `clientId`, `clientSecret`, `subscriptionId`, `tenantId`
+
+- **ASO controller settings secret**
+  - Reuses the same Service Principal credentials for Azure Service Operator
 
 ## Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `crossplane_version` | Version of Crossplane to install | `1.18.4` |
+| `crossplane_version` | Version of Crossplane chart (hardcoded at `2.1.3` in ArgoCD manifest) | `2.1.3` |
 | `crossplane_provider_family_azure_version` | Version of provider-family-azure | `v2.3.0` |
 | `crossplane_provider_azure_cache_version` | Version of provider-azure-cache | `v2.3.0` |
 
@@ -68,19 +61,16 @@ All resources are deployed in the `resources-system` namespace:
 
 | Output | Description |
 |--------|-------------|
-| `crossplane_identity_client_id` | The Client ID of the Crossplane managed identity |
-| `crossplane_identity_principal_id` | The Principal ID of the Crossplane managed identity |
+| `crossplane_identity_client_id` | The Client ID of the Crossplane app registration |
+| `crossplane_identity_principal_id` | The Principal ID of the Crossplane service principal |
 | `crossplane_subscription_id` | The Azure Subscription ID used by Crossplane |
 | `crossplane_tenant_id` | The Azure Tenant ID used by Crossplane |
-| `crossplane_resource_group_name` | The name of the resource group containing Crossplane infrastructure |
 
 ## Prerequisites
 
-1. AKS cluster with:
-   - OIDC Issuer enabled (`oidc_issuer_enabled = true`)
-   - Workload Identity enabled (`workload_identity_enabled = true`)
-   
-2. ArgoCD installed and configured
+1. AKS cluster configured
+
+2. ArgoCD installed and configured in `devops-system` namespace
 
 3. Environment variables:
    - `ARM_SUBSCRIPTION_ID`: Azure subscription ID
@@ -89,30 +79,31 @@ All resources are deployed in the `resources-system` namespace:
 
 The Terraform configuration ensures proper dependency ordering:
 
-1. Azure infrastructure (Resource Group, Managed Identity, Federated Credential, Role Assignment)
+1. Azure infrastructure (App Registration, Service Principal, Role Assignment)
 2. AKS cluster and namespaces
 3. ArgoCD installation and configuration
-4. Crossplane ArgoCD Application
+4. Crossplane ArgoCD Application (deployed to `control-plane-system` namespace)
 5. Provider installations
-6. DeploymentRuntimeConfig
-7. ProviderConfig
+6. ClusterProviderConfig
+7. Credentials secret
 
-## Workload Identity Configuration
+## Service Principal Authentication
 
-The implementation uses Azure Workload Identity with a wildcard federated credential pattern:
+The implementation uses an Azure AD Service Principal with client secret:
 
-- **Subject Pattern**: `system:serviceaccount:resources-system:*`
-- **Benefit**: Single credential works for all Crossplane provider service accounts
-- **Automatic Injection**: Azure Workload Identity webhook automatically injects required environment variables and volume mounts
+- **App Registration**: `azure-operators-sp` created in Azure AD
+- **Service Principal**: Gets Contributor role at subscription level
+- **Client Secret**: Stored as Kubernetes Secret `azure-crossplane-credentials`
+- **ClusterProviderConfig**: References the secret for authentication
 
 ### How It Works
 
-1. Provider pods are created with label `azure.workload.identity/use: "true"`
-2. Service accounts are annotated with `azure.workload.identity/client-id`
-3. Azure Workload Identity webhook injects:
-   - Environment variables: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_FEDERATED_TOKEN_FILE`, `AZURE_AUTHORITY_HOST`
-   - Volume mounts for OIDC token
-4. Providers authenticate using the OIDC token file
+1. Terraform creates an Azure AD App Registration and Service Principal
+2. A client secret is generated and stored as a Kubernetes Secret
+3. The secret contains JSON with `clientId`, `clientSecret`, `subscriptionId`, and `tenantId`
+4. The `ClusterProviderConfig` references this secret using `credentials.source: Secret`
+5. Providers authenticate using the client secret credentials
+6. Azure Service Operator (ASO v2.17.0) reuses the same Service Principal
 
 ## Verifying the Installation
 
@@ -123,16 +114,15 @@ kubectl get pods -n resources-system
 kubectl get providers -n resources-system
 ```
 
-### Verify Workload Identity Configuration
+### Verify Service Principal Authentication
 
 ```bash
-# Check provider pod has workload identity label
-kubectl get pod -n resources-system -l pkg.crossplane.io/provider=provider-azure-cache \
-  -o jsonpath='{.items[0].metadata.labels.azure\.workload\.identity/use}'
+# Check the credentials secret exists
+kubectl get secret azure-crossplane-credentials -n resources-system
 
-# Check environment variables are injected
-kubectl get pod -n resources-system -l pkg.crossplane.io/provider=provider-azure-cache \
-  -o jsonpath='{.items[0].spec.containers[0].env[*].name}' | grep AZURE
+# Verify ClusterProviderConfig is healthy
+kubectl get clusterproviderconfig default
+kubectl describe clusterproviderconfig default
 ```
 
 ### Test with a Managed Resource
@@ -150,7 +140,7 @@ spec:
     resourceGroupName: aks-control-plane
     skuName: Balanced_B3
   providerConfigRef:
-    kind: ProviderConfig
+    kind: ClusterProviderConfig
     name: default
 EOF
 
@@ -169,30 +159,28 @@ kubectl logs -n resources-system -l pkg.crossplane.io/provider=provider-azure
 
 ### Authentication Issues
 
-1. Verify managed identity exists and has proper permissions:
+1. Verify the credentials secret exists and has correct keys:
    ```bash
-   az identity show --name crossplane-identity --resource-group aks-control-plane
-   az role assignment list --assignee <principal-id>
+   kubectl get secret azure-crossplane-credentials -n resources-system -o yaml
    ```
 
-2. Check federated credential:
+2. Verify Service Principal has correct permissions:
    ```bash
-   az identity federated-credential list \
-     --identity-name crossplane-identity \
-     --resource-group aks-control-plane
+   az ad sp show --id <client-id>
+   az role assignment list --assignee <client-id>
    ```
 
-3. Verify OIDC issuer URL matches:
+3. Check ClusterProviderConfig status:
    ```bash
-   az aks show --name <cluster-name> --resource-group <rg-name> \
-     --query "oidcIssuerProfile.issuerUrl"
+   kubectl get clusterproviderconfig default -o yaml
+   kubectl describe clusterproviderconfig default
    ```
 
-### ProviderConfig Not Working
+### ClusterProviderConfig Not Working
 
 ```bash
-kubectl get providerconfig default -n resources-system -o yaml
-kubectl describe providerconfig default -n resources-system
+kubectl get clusterproviderconfig default -o yaml
+kubectl describe clusterproviderconfig default
 ```
 
 ## Cleanup
@@ -210,6 +198,5 @@ terraform destroy
 ## References
 
 - [Crossplane Documentation](https://docs.crossplane.io/)
-- [Azure Workload Identity](https://azure.github.io/azure-workload-identity/)
 - [Upbound Azure Provider](https://marketplace.upbound.io/providers/upbound/provider-family-azure/)
-- [Crossplane Azure Workload Identity Guide](../CROSSPLANE_AZURE_WORKLOAD_IDENTITY.md)
+- [Crossplane Azure Workload Identity Guide](../architecture/crossplane-azure-workload-identity.md)

@@ -19,28 +19,26 @@ All Crossplane assets have been successfully moved from `control-plane-system` t
 ### 1. Namespace Definition
 **File**: `aks-foundation/aks_cluster_namespaces.tf`
 
-Added `resources-system` namespace to locals:
+Updated locals to include all current namespaces:
 ```hcl
 locals {
   namespaces = {
-    ...
+    jarvix        = "jarvix-system"
+    devops        = "devops-system"
+    gateway       = "gateway-system"
+    observability = "observability-system"
+    pipeline      = "pipeline-system"
+    security      = "security-system"
+    test          = "test-system"
+    storage       = "storage-system"
+    ai            = "ai-system"
     control_plane = "control-plane-system"
-    resources     = "resources-system"  # NEW
+    resources     = "resources-system"
   }
 }
 ```
 
-### 2. Federated Identity Credential
-**File**: `aks-foundation/crossplane_infrastructure.tf`
-
-Updated subject pattern:
-```hcl
-subject = "system:serviceaccount:${local.namespaces.resources}:*"
-```
-- **Before**: `system:serviceaccount:control-plane-system:*`
-- **After**: `system:serviceaccount:resources-system:*`
-
-### 3. All Crossplane Kubernetes Resources
+### 2. All Crossplane Kubernetes Resources
 **File**: `aks-foundation/crossplane_argocd.tf`
 
 Updated all resources to use `${local.namespaces.resources}`:
@@ -52,18 +50,17 @@ Updated all resources to use `${local.namespaces.resources}`:
 | Provider - upbound-provider-family-azure | ✅ Metadata namespace |
 | Provider - provider-redis-azure | ✅ Metadata namespace |
 | Kubernetes Secret - azure-crossplane-credentials | ✅ Metadata namespace |
-| DeploymentRuntimeConfig - crossplane-runtime-config | ✅ Metadata namespace |
-| ProviderConfig - default | ✅ Metadata namespace |
+| ClusterProviderConfig - default | ✅ Configured for resources-system |
 
-### 4. Documentation Updates
+### 3. Documentation Updates
 
 All documentation files updated to reference `resources-system`:
 
 | File | Status |
 |------|--------|
-| `aks-foundation/CROSSPLANE_README.md` | ✅ Updated |
-| `CROSSPLANE_IMPLEMENTATION_SUMMARY.md` | ✅ Updated |
-| `QUICKSTART.md` | ✅ Updated |
+| `docs/reference/crossplane-readme.md` | ✅ Updated |
+| `docs/architecture/crossplane-implementation-summary.md` | ✅ Updated |
+| `docs/setup/quickstart.md` | ✅ Updated |
 
 ## Verification Commands
 
@@ -78,32 +75,32 @@ kubectl get namespace resources-system
 kubectl get pods -n resources-system
 
 # Providers
-kubectl get providers -n resources-system
+kubectl get providers
 
-# Runtime Config
-kubectl get deploymentruntimeconfig -n resources-system
-
-# Provider Config
-kubectl get providerconfig -n resources-system
+# ClusterProviderConfig
+kubectl get clusterproviderconfig
 
 # Secret
 kubectl get secret azure-crossplane-credentials -n resources-system
+
+# ASO pods
+kubectl get pods -n resources-system -l app.kubernetes.io/name=azure-service-operator
 ```
 
-### Verify Workload Identity
+### Verify Credentials Secret
 ```bash
-# Check service account annotation
-kubectl get sa -n resources-system -o yaml | grep "azure.workload.identity/client-id"
+# Check credentials secret exists
+kubectl get secret azure-crossplane-credentials -n resources-system
 
-# Check pod labels
-kubectl get pods -n resources-system -o yaml | grep "azure.workload.identity/use"
+# Check ASO controller settings secret
+kubectl get secret aso-controller-settings -n resources-system
 ```
 
 ## Impact Analysis
 
 ### ✅ No Breaking Changes
 - All references use Terraform locals
-- Federated credential subject pattern updated
+- Credentials secret correctly scoped to resources-system
 - Namespace created before resources
 
 ### ✅ Consistent Configuration
@@ -112,8 +109,8 @@ kubectl get pods -n resources-system -o yaml | grep "azure.workload.identity/use
 - Aligns with naming conventions
 
 ### ✅ Security Maintained
-- Federated credential correctly scoped to new namespace
-- Workload identity configuration intact
+- Credentials secret correctly scoped to resources-system namespace
+- Service Principal authentication configuration intact
 - RBAC boundaries preserved
 
 ## Resources in resources-system Namespace
@@ -130,9 +127,9 @@ After deployment, the following resources will exist in `resources-system`:
 - Provider CRDs and configurations
 
 ### Configuration
-- DeploymentRuntimeConfig (crossplane-runtime-config)
-- ProviderConfig (default)
+- ClusterProviderConfig (default)
 - Kubernetes Secret (azure-crossplane-credentials)
+- Kubernetes Secret (aso-controller-settings)
 
 ### Managed Resources
 - Any Azure resources created via Crossplane (e.g., ManagedRedis instances)
@@ -144,9 +141,9 @@ After deployment, verify:
 - [ ] Namespace `resources-system` is created
 - [ ] Crossplane pods are running in `resources-system`
 - [ ] Provider pods are running in `resources-system`
-- [ ] Workload identity labels present on pods
-- [ ] Service accounts have workload identity annotations
-- [ ] ProviderConfig exists and is configured
+- [ ] Credentials secret `azure-crossplane-credentials` exists in `resources-system`
+- [ ] ClusterProviderConfig exists and is configured
+- [ ] ASO pods are running in `resources-system`
 - [ ] Can create a test managed resource
 - [ ] Test resource shows SYNCED=True and READY=True
 
@@ -187,9 +184,9 @@ However, this should not be necessary as the change is properly scoped and teste
 
 ## Conclusion
 
-✅ **Validation Complete**: All Crossplane assets are correctly configured to use `resources-system` namespace.
+✅ **Validation Complete**: All Crossplane and ASO assets are correctly configured to use `resources-system` namespace.
 
-The namespace change:
+The namespace configuration:
 - Is semantically correct
 - Maintains security posture
 - Follows project conventions

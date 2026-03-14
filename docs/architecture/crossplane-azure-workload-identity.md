@@ -1,5 +1,7 @@
 # Configuring Crossplane with Azure Workload Identity on AKS
 
+> **Note**: This document describes the manual Workload Identity setup approach. The current project implementation uses **Service Principal authentication** instead. See [Crossplane Implementation Summary](crossplane-implementation-summary.md) for the current setup. This guide is retained as reference for organizations that prefer Workload Identity over Service Principal auth.
+
 This guide provides step-by-step instructions for setting up Crossplane on Azure Kubernetes Service (AKS) with Workload Identity authentication.
 
 ## Prerequisites

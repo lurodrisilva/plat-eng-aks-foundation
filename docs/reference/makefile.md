@@ -87,8 +87,8 @@ make destroy
 **⚠️ WARNING:** This command is **DANGEROUS** and will destroy all infrastructure!
 
 **What it does:**
-1. Runs `terraform destroy` with `-auto-approve`
-2. Uses `-lock=false` flag
+1. Deletes `baseline-addons` ArgoCD Application from `control-plane-system` namespace
+2. Runs `terraform destroy` with `-auto-approve` and `-lock=false`
 3. Destroys all resources in the current workspace
 
 **Safety note:** The message "TAKE CARE MAFREND!!!" reminds you to be careful!
@@ -209,7 +209,7 @@ make plan
 All Terraform commands are executed in the `aks-foundation` directory:
 
 ```
-01-aks-tf/
+03-plat-eng-aks-foundation/
 ├── makefile
 ├── aks-foundation/
 │   ├── main.tf

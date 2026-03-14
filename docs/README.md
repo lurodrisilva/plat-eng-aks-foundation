@@ -57,6 +57,7 @@ Start here if you're new to the project:
 - **Use Make commands** → [Makefile Reference](reference/makefile.md)
 - **Expose ArgoCD publicly** → [ArgoCD Public Endpoint](guides/argocd-public-endpoint.md)
 - **Configure Crossplane** → [Crossplane README](reference/crossplane-readme.md)
+- **Deploy Azure Service Operator** → [Crossplane README](reference/crossplane-readme.md)
 - **Troubleshoot issues** → Start with [Crossplane README](reference/crossplane-readme.md)
 
 ## 🔍 Quick Links
@@ -83,6 +84,7 @@ Located in `../aks-foundation/`:
 - `main.tf` - AKS cluster configuration
 - `aks_addons_argocd.tf` - ArgoCD installation
 - `argocd_public_ingress.tf` - Public endpoint setup
+- `aso_argocd.tf` - Azure Service Operator deployment
 - `crossplane_*.tf` - Crossplane configuration
 - `aks_cluster_namespaces.tf` - Namespace definitions
 - `vault.tf` - Vault installation
@@ -142,7 +144,7 @@ To improve documentation:
 | Architecture | 2 | ✅ Complete |
 | Reference | 2 | ✅ Complete |
 
-Last updated: 2026-01-11
+Last updated: 2026-03-14
 
 ---
 

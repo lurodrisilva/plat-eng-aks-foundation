@@ -4,14 +4,14 @@
 
 - Azure CLI installed and authenticated
 - kubectl installed
-- Terraform >= 1.0
+- Terraform >= 1.3
 - Environment variable: `ARM_SUBSCRIPTION_ID`
 
 ## Deploy Everything
 
 ```bash
 # Navigate to the project
-cd 01-aks-tf/aks-foundation
+cd aks-foundation
 
 # Set required environment variable
 export ARM_SUBSCRIPTION_ID="<your-subscription-id>"
@@ -50,12 +50,12 @@ kubectl get providers -n resources-system
 ## Get Credentials
 
 ```bash
-# View Crossplane credentials
+# View Crossplane Service Principal credentials
 terraform output crossplane_identity_client_id
 terraform output crossplane_subscription_id
 terraform output crossplane_tenant_id
 
-# Or get from Kubernetes secret
+# Get from Kubernetes secret (stores JSON with clientId, clientSecret, subscriptionId, tenantId)
 kubectl get secret azure-crossplane-credentials -n resources-system -o yaml
 ```
 
@@ -76,6 +76,7 @@ spec:
     resourceGroupName: aks-control-plane
     skuName: Balanced_B3
   providerConfigRef:
+    kind: ClusterProviderConfig
     name: default
 EOF
 ```
@@ -98,23 +99,15 @@ kubectl describe managedredis test-redis -n resources-system
 kubectl logs -n resources-system -l pkg.crossplane.io/provider=provider-azure-cache
 ```
 
-### Verify Workload Identity
+### Verify Service Principal Authentication
 
 ```bash
-# Check pod has workload identity enabled
-kubectl get pod -n resources-system -l pkg.crossplane.io/provider=provider-azure-cache \
-  -o jsonpath='{.items[0].metadata.labels.azure\.workload\.identity/use}'
+# Check the credentials secret exists and has correct data
+kubectl get secret azure-crossplane-credentials -n resources-system
 
-# Should output: true
-```
-
-### Check Environment Variables
-
-```bash
-kubectl get pod -n resources-system -l pkg.crossplane.io/provider=provider-azure-cache \
-  -o jsonpath='{.items[0].spec.containers[0].env[*].name}'
-
-# Should include: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_FEDERATED_TOKEN_FILE
+# Verify secret contains expected keys (clientId, clientSecret, subscriptionId, tenantId)
+kubectl get secret azure-crossplane-credentials -n resources-system \
+  -o jsonpath='{.data}' | python3 -c "import sys,json,base64; d=json.load(sys.stdin); [print(k) for k in d]"
 ```
 
 ## Cleanup Test Resources
@@ -140,10 +133,8 @@ terraform destroy
 ## What Gets Created
 
 ### Azure Resources
-- Resource Group: `aks-control-plane`
-- Managed Identity: `crossplane-identity`
-- Role Assignment: Contributor at subscription level
-- Federated Identity Credential for workload identity
+- Azure AD App Registration: `azure-operators-sp`
+- Service Principal with Contributor role at subscription level
 - AKS Cluster: `aks-test`
 - Resource Group: `aks-test-rg`
 
@@ -151,11 +142,12 @@ terraform destroy
 - Namespace: `resources-system`
 - Namespace: `devops-system`
 - ArgoCD: Full installation
-- Crossplane: Core installation
+- Crossplane: Core installation (chart `2.1.3`)
+- Azure Service Operator (ASO v2.17.0) deployment
 - Providers: provider-family-azure, provider-azure-cache
-- DeploymentRuntimeConfig: Workload identity configuration
-- ProviderConfig: Azure authentication config
-- Secret: Credential backup
+- ClusterProviderConfig: Azure authentication using Secret credentials
+- Secret: `azure-crossplane-credentials` with JSON credentials
+- ASO controller settings secret
 
 ## Configuration Variables
 
@@ -163,7 +155,7 @@ Customize in `terraform.tfvars`:
 
 ```hcl
 # Crossplane versions
-crossplane_version                       = "1.18.4"
+crossplane_version                       = "2.1.3"  # chart version (hardcoded in ArgoCD manifest)
 crossplane_provider_family_azure_version = "v2.3.0"
 crossplane_provider_azure_cache_version  = "v2.3.0"
 
@@ -186,35 +178,35 @@ kubernetes_version = "1.34"
 
 For issues:
 1. Check provider logs
-2. Verify workload identity configuration
-3. Review Azure managed identity permissions
+2. Verify Service Principal credentials secret exists
+3. Review Azure Service Principal permissions
 4. Consult the troubleshooting guides
 
 ## Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         Azure                                │
+│                         Azure AD                             │
 │                                                              │
-│  ┌──────────────────────┐  ┌─────────────────────────────┐ │
-│  │  aks-control-plane   │  │  Subscription               │ │
-│  │                      │  │                             │ │
-│  │  - Managed Identity  │  │  - Contributor Role         │ │
-│  │  - Fed. Credential   │  │    Assignment               │ │
-│  └──────────────────────┘  └─────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  App Registration: azure-operators-sp                │   │
+│  │  Service Principal with Contributor role             │   │
+│  │  (Subscription level)                                │   │
+│  └──────────────────────────────────────────────────────┘   │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
-                           ↕ OIDC Token Exchange
+                           ↕ Client Secret Authentication
 ┌─────────────────────────────────────────────────────────────┐
 │                    AKS Cluster (aks-test)                    │
 │                                                              │
 │  ┌────────────────────────┐  ┌───────────────────────────┐ │
-│  │  devops-system         │  │  resources-system     │ │
+│  │  devops-system         │  │  resources-system         │ │
 │  │                        │  │                           │ │
 │  │  - ArgoCD              │  │  - Crossplane             │ │
 │  │  - ArgoCD Projects     │  │  - Azure Providers        │ │
-│  │  - ArgoCD Apps         │  │  - ProviderConfig         │ │
-│  └────────────────────────┘  │  - Managed Resources      │ │
+│  │  - ArgoCD Apps         │  │  - ClusterProviderConfig  │ │
+│  └────────────────────────┘  │  - Credentials Secret     │ │
+│                               │  - Managed Resources      │ │
 │                               └───────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
