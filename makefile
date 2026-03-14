@@ -24,6 +24,8 @@ apply: plan
 
 destroy:
 	@echo '## Destroying... TAKE CARE MAFREND!!!'
+	@echo '## Deleting baseline-addons ArgoCD Application...'
+	-kubectl delete application.argoproj.io baseline-addons -n control-plane-system --ignore-not-found --wait=true --timeout=120s
 	terraform -chdir=./aks-foundation destroy -lock=false -auto-approve
 	
 upgrade: init plan apply
