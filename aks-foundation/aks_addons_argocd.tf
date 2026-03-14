@@ -140,7 +140,7 @@ resource "kubectl_manifest" "argocd_app_gitops" {
     spec:
       project: addons-project
       source:
-        repoURL: https://github.com/lurodrisilva/gitops.git
+        repoURL: https://github.com/lurodrisilva/plat-eng-baseline-addons.git
         targetRevision: HEAD
         path: base_chart
       destination:
