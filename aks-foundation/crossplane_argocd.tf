@@ -253,6 +253,18 @@ resource "kubectl_manifest" "provider_azure_cache" {
   ]
 }
 
+# Wait for Crossplane providers to register their CRDs with the API server.
+# Provider packages need time to download, start pods, and establish CRDs.
+# See: https://github.com/crossplane/crossplane/issues/5828
+resource "time_sleep" "wait_for_crossplane_provider_crds" {
+  create_duration = var.interval_before_crossplane_installation
+
+  depends_on = [
+    kubectl_manifest.provider_family_azure,
+    kubectl_manifest.provider_azure_cache,
+  ]
+}
+
 # ################################################################################
 # # Kubernetes Secret - Azure Credentials
 # ################################################################################
@@ -290,8 +302,8 @@ resource "kubernetes_secret" "crossplane_azure_credentials" {
 
 resource "kubectl_manifest" "crossplane_provider_config" {
   yaml_body = <<-YAML
-apiVersion: azure.m.upbound.io/v1beta1
-kind: ClusterProviderConfig
+apiVersion: azure.upbound.io/v1beta1
+kind: ProviderConfig
 metadata:
   name: default
 spec:
@@ -304,10 +316,8 @@ spec:
   YAML
 
   depends_on = [
-    kubectl_manifest.provider_family_azure,
-    kubectl_manifest.provider_azure_cache,
+    time_sleep.wait_for_crossplane_provider_crds,
     azurerm_role_assignment.crossplane_contributor,
     kubernetes_secret.crossplane_azure_credentials,
-    time_sleep.interval_before_crossplane_installation
   ]
 }
