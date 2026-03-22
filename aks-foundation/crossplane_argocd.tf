@@ -92,8 +92,7 @@ spec:
     kubernetes_namespace.namespaces,
     helm_release.argocd,
     kubectl_manifest.argocd_project_addons,
-    kubectl_manifest.argocd_repo_gitops,
-    kubectl_manifest.argocd_repo_gitops
+    kubectl_manifest.argocd_repo_addons,
   ]
 }
 
