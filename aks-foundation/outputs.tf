@@ -271,3 +271,37 @@ output "argocd_url" {
   description = "The URL to access ArgoCD"
   value       = "http://${azurerm_public_ip.argocd.fqdn}"
 }
+
+################################################################################
+# Networking Outputs
+################################################################################
+
+output "vnet_id" {
+  description = "The ID of the AKS VNet"
+  value       = azurerm_virtual_network.aks.id
+}
+
+output "vnet_name" {
+  description = "The name of the AKS VNet"
+  value       = azurerm_virtual_network.aks.name
+}
+
+output "aks_nodes_subnet_id" {
+  description = "The ID of the AKS nodes subnet"
+  value       = azurerm_subnet.aks_nodes.id
+}
+
+output "private_endpoints_subnet_id" {
+  description = "The ID of the private endpoints subnet"
+  value       = azurerm_subnet.private_endpoints.id
+}
+
+output "private_dns_zone_ids" {
+  description = "Map of Private DNS Zone names to their IDs"
+  value       = { for k, v in azurerm_private_dns_zone.zones : k => v.id }
+}
+
+output "private_dns_zone_names_map" {
+  description = "Map of Private DNS Zone keys to their names"
+  value       = { for k, v in azurerm_private_dns_zone.zones : k => v.name }
+}

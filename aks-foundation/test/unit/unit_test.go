@@ -141,7 +141,7 @@ func TestAutomaticUpgrades(t *testing.T) {
 
 	for name, tt := range testCases {
 		t.Run(name, func(t *testing.T) {
-			tt.vars["location"] = "eastus"
+			tt.vars["location"] = "westus2"
 			test_helper.RunUnitTest(t, "../../", "unit-test-fixture",
 				terraform.Options{
 					Upgrade: false,
@@ -192,7 +192,7 @@ func TestInvalidVarsForAutomaticUpgrades(t *testing.T) {
 
 	for name, tt := range testCases {
 		t.Run(name, func(t *testing.T) {
-			tt.vars["location"] = "eastus"
+			tt.vars["location"] = "westus2"
 			test_helper.RunUnitTest(t, "../../", "unit-test-fixture",
 				terraform.Options{
 					Upgrade: false,
@@ -302,6 +302,6 @@ func dummyRequiredVariables() map[string]interface{} {
 	return map[string]interface{}{
 		"prefix":              "foo",
 		"resource_group_name": "bar",
-		"location":            "eastus",
+		"location":            "westus2",
 	}
 }

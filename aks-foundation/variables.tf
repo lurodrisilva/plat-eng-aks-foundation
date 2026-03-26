@@ -1,6 +1,6 @@
 variable "location" {
   type        = string
-  default     = "eastus"
+  default     = "westus2"
   description = "Location of cluster, if not defined it will be read from the resource-group"
 }
 
@@ -1632,4 +1632,50 @@ variable "upgrade_override" {
     `force_upgrade_enabled` - (Required) Whether to force upgrade the cluster. Possible values are `true` or `false`.
     `effective_until` - (Optional) Specifies the duration, in RFC 3339 format (e.g., `2025-10-01T13:00:00Z`), the upgrade_override values are effective. This field must be set for the `upgrade_override` values to take effect. The date-time must be within the next 30 days.
   EOT
+}
+
+################################################################################
+# Networking Variables
+################################################################################
+
+variable "vnet_name" {
+  type        = string
+  default     = "aks-vnet"
+  description = "Name of the Virtual Network"
+}
+
+variable "vnet_address_space" {
+  type        = list(string)
+  default     = ["10.0.0.0/16"]
+  description = "Address space for the Virtual Network"
+}
+
+variable "aks_nodes_subnet_name" {
+  type        = string
+  default     = "aks-nodes-subnet"
+  description = "Name of the subnet for AKS nodes"
+}
+
+variable "aks_nodes_subnet_prefix" {
+  type        = list(string)
+  default     = ["10.0.0.0/22"]
+  description = "Address prefixes for the AKS nodes subnet"
+}
+
+variable "private_endpoints_subnet_name" {
+  type        = string
+  default     = "private-endpoints-subnet"
+  description = "Name of the subnet for Azure private endpoints"
+}
+
+variable "private_endpoints_subnet_prefix" {
+  type        = list(string)
+  default     = ["10.0.4.0/24"]
+  description = "Address prefixes for the private endpoints subnet. Private endpoint network policies are disabled on this subnet."
+}
+
+variable "private_dns_zone_names" {
+  type        = set(string)
+  default     = ["privatelink.redis.cache.windows.net", "privatelink.vaultcore.azure.net", "privatelink.blob.core.windows.net"]
+  description = "Set of Private DNS Zone names to create and link to the AKS VNet. Each Azure service type requires its own zone with an exact name (e.g. privatelink.redis.cache.windows.net). DNS records for private endpoints are created by private_dns_zone_group on azurerm_private_endpoint resources — not by auto-registration."
 }
