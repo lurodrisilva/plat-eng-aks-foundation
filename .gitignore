@@ -68,4 +68,5 @@ test/go.sum
 /TestRecord
 **/TestRecord.md.tmp
 
+.opencode/
 .sisyphus/
