@@ -38,49 +38,49 @@ resource "kubernetes_secret" "aso_controller_settings" {
   ]
 }
 
-# ArgoCD Application for Azure Service Operator v2
-# Chart repo: https://raw.githubusercontent.com/Azure/azure-service-operator/main/v2/charts
-# Chart name: azure-service-operator
-resource "kubectl_manifest" "argocd_app_aso" {
-  yaml_body = <<-YAML
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: azure-service-operator
-  namespace: ${local.namespaces.control_plane}
-spec:
-  project: addons-project
-  source:
-    repoURL: https://raw.githubusercontent.com/Azure/azure-service-operator/main/v2/charts
-    chart: azure-service-operator
-    targetRevision: v2.17.0
-    helm:
-      parameters:
-        - name: crdPattern
-          value: "resources.azure.com/*;keyvault.azure.com/*;managedidentity.azure.com/*;containerservice.azure.com/*"
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: ${local.namespaces.resources}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
-  YAML
+# # ArgoCD Application for Azure Service Operator v2
+# # Chart repo: https://raw.githubusercontent.com/Azure/azure-service-operator/main/v2/charts
+# # Chart name: azure-service-operator
+# resource "kubectl_manifest" "argocd_app_aso" {
+#   yaml_body = <<-YAML
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: azure-service-operator
+#   namespace: ${local.namespaces.control_plane}
+# spec:
+#   project: addons-project
+#   source:
+#     repoURL: https://raw.githubusercontent.com/Azure/azure-service-operator/main/v2/charts
+#     chart: azure-service-operator
+#     targetRevision: v2.17.0
+#     helm:
+#       parameters:
+#         - name: crdPattern
+#           value: "resources.azure.com/*;keyvault.azure.com/*;managedidentity.azure.com/*;containerservice.azure.com/*"
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: ${local.namespaces.resources}
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#       - ServerSideApply=true
+#     retry:
+#       limit: 5
+#       backoff:
+#         duration: 5s
+#         factor: 2
+#         maxDuration: 3m
+#   YAML
 
-  depends_on = [
-    local.namespaces,
-    kubernetes_secret.aso_controller_settings,
-    helm_release.argocd,
-    kubectl_manifest.argocd_project_addons,
-    kubectl_manifest.argocd_repo_addons
-  ]
-}
+#   depends_on = [
+#     local.namespaces,
+#     kubernetes_secret.aso_controller_settings,
+#     helm_release.argocd,
+#     kubectl_manifest.argocd_project_addons,
+#     kubectl_manifest.argocd_repo_addons
+#   ]
+# }
