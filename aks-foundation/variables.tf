@@ -42,7 +42,7 @@ variable "agents_availability_zones" {
 
 variable "agents_count" {
   type        = number
-  default     = 3
+  default     = 5
   description = "The number of Agents that should exist in the Agent Pool. Please set `agents_count` `null` while `auto_scaling_enabled` is `true` to avoid possible `agents_count` changes."
 }
 
