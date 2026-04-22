@@ -208,50 +208,19 @@ resource "time_sleep" "interval_before_crossplane_installation" {
 # }
 
 ################################################################################
-# Kubernetes Manifest - Provider Family Azure (Direct)
+# Crossplane Providers
 ################################################################################
-
-resource "kubectl_manifest" "provider_family_azure" {
-  yaml_body = <<-YAML
-    apiVersion: pkg.crossplane.io/v1
-    kind: Provider
-    metadata:
-      name: upbound-provider-family-azure
-      namespace: ${local.namespaces.resources}
-    spec:
-      package: xpkg.upbound.io/upbound/provider-family-azure:${var.crossplane_provider_family_azure_version}
-      packagePullPolicy: Always
-  YAML
-
-  depends_on = [
-    kubectl_manifest.argocd_app_crossplane,
-    kubernetes_secret.crossplane_azure_credentials,
-    time_sleep.interval_before_crossplane_installation
-  ]
-}
-
-################################################################################
-# Kubernetes Manifest - Provider Azure Cache (Direct)
-################################################################################
-
-resource "kubectl_manifest" "provider_azure_cache" {
-  yaml_body = <<-YAML
-    apiVersion: pkg.crossplane.io/v1
-    kind: Provider
-    metadata:
-      name: provider-redis-azure
-      namespace: ${local.namespaces.resources}
-    spec:
-      package: xpkg.upbound.io/upbound/provider-azure-cache:${var.crossplane_provider_azure_cache_version}
-      packagePullPolicy: Always
-  YAML
-
-  depends_on = [
-    kubectl_manifest.argocd_app_crossplane,
-    kubernetes_secret.crossplane_azure_credentials,
-    time_sleep.interval_before_crossplane_installation
-  ]
-}
+# NOTE: Provider CRs (upbound-provider-family-azure, upbound-provider-azure-cache,
+# upbound-provider-azure-network) are managed declaratively by the ArgoCD
+# `providers` application defined in 00-aks-baseline/addon_charts/providers.
+#
+# They were previously also created directly here via `kubectl_manifest`, which
+# duplicated the `xpkg.upbound.io/upbound/provider-azure-cache` package in the
+# Crossplane dependency graph (one from `provider-redis-azure` v2.3.0 here, one
+# from `upbound-provider-azure-cache` v2.5.2 in the chart) and produced:
+#   "cannot initialize dependency graph from the packages in the lock:
+#    node xpkg.upbound.io/upbound/provider-azure-cache already exists"
+# degrading every provider in the family. Ownership is now solely ArgoCD's.
 
 # Wait for Crossplane providers to register their CRDs with the API server.
 # Provider packages need time to download, start pods, and establish CRDs.
@@ -260,8 +229,8 @@ resource "time_sleep" "wait_for_crossplane_provider_crds" {
   create_duration = var.interval_before_crossplane_installation
 
   depends_on = [
-    kubectl_manifest.provider_family_azure,
-    kubectl_manifest.provider_azure_cache,
+    kubectl_manifest.argocd_app_crossplane,
+    time_sleep.interval_before_crossplane_installation,
   ]
 }
 
