@@ -1,4 +1,10 @@
 locals {
+  # Default subnet for the AKS cluster's node pool. Prefer an externally-supplied
+  # `var.vnet_subnet` when present (BYO subnet), otherwise fall back to the
+  # locally-managed `aks-vnet` / `aks-nodes-subnet` defined in networking.tf.
+  # This guarantees the cluster lands inside aks-vnet so it can reach PaaS
+  # private endpoints created in the sibling private-endpoints subnet.
+  aks_default_subnet_id = try(var.vnet_subnet.id, azurerm_subnet.aks_nodes.id)
   # Abstract if auto_scaler_profile_scale_down_delay_after_delete is not set or null we should use the scan_interval.
   auto_scaler_profile_scale_down_delay_after_delete = var.auto_scaler_profile_scale_down_delay_after_delete == null ? var.auto_scaler_profile_scan_interval : var.auto_scaler_profile_scale_down_delay_after_delete
   # automatic upgrades are either:

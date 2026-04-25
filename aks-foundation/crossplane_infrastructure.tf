@@ -33,14 +33,14 @@ resource "azuread_application" "crossplane" {
 }
 
 resource "azuread_service_principal" "crossplane" {
-client_id = azuread_application.crossplane.client_id
+  client_id = azuread_application.crossplane.client_id
 }
 
 # Client secret for the service principal
 resource "azuread_application_password" "crossplane" {
   # application_id must be the application resource ID ("/applications/{objectId}"), use azuread_application.id
-  application_id    = azuread_application.crossplane.id
-  display_name      = "resources-sp-secret"
+  application_id = azuread_application.crossplane.id
+  display_name   = "resources-sp-secret"
 }
 
 ################################################################################
