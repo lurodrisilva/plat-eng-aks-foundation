@@ -49,12 +49,24 @@ pr-check:
 	terraform -chdir=./aks-foundation init -backend=false -input=false
 	terraform -chdir=./aks-foundation validate
 
+build-test:
+	@echo '## Build test (compile-only) ...'
+	cd aks-foundation/test && go mod download && go build ./...
+
 e2e-test:
 	@echo '## E2E test ...'
 	@if [ -z "$$ARM_CLIENT_ID" ] || [ -z "$$ARM_SUBSCRIPTION_ID" ] || [ -z "$$ARM_TENANT_ID" ]; then \
 		echo 'Skipping: Azure credentials (ARM_CLIENT_ID / ARM_SUBSCRIPTION_ID / ARM_TENANT_ID) are not configured in this repository. Configure OIDC or repo secrets to enable e2e provisioning tests.'; \
 	else \
-		cd aks-foundation/test && go test -v -timeout 90m ./e2e/...; \
+		cd aks-foundation/test && go mod download && go test -v -timeout 90m ./e2e/...; \
+	fi
+
+version-upgrade-test:
+	@echo '## Version upgrade test ...'
+	@if [ -z "$$ARM_CLIENT_ID" ] || [ -z "$$ARM_SUBSCRIPTION_ID" ] || [ -z "$$ARM_TENANT_ID" ]; then \
+		echo 'Skipping: Azure credentials (ARM_CLIENT_ID / ARM_SUBSCRIPTION_ID / ARM_TENANT_ID) are not configured in this repository. Configure OIDC or repo secrets to enable upgrade-path provisioning tests.'; \
+	else \
+		cd aks-foundation/test && go mod download && go test -v -timeout 120m ./upgrade/...; \
 	fi
 
 # environment-up:
