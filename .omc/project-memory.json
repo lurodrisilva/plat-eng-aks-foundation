@@ -68,27 +68,39 @@
   },
   "hotPaths": [
     {
-      "path": "README.md",
-      "accessCount": 1,
-      "lastAccessed": 1777080725244,
+      "path": "aks-foundation/main.tf",
+      "accessCount": 4,
+      "lastAccessed": 1777081556022,
       "type": "file"
     },
     {
       "path": "makefile",
-      "accessCount": 1,
-      "lastAccessed": 1777080725534,
+      "accessCount": 3,
+      "lastAccessed": 1777081953638,
       "type": "file"
     },
     {
-      "path": "aks-foundation/main.tf",
-      "accessCount": 1,
-      "lastAccessed": 1777080730794,
+      "path": "aks-foundation/variables.tf",
+      "accessCount": 2,
+      "lastAccessed": 1777081469785,
       "type": "file"
     },
     {
       "path": "aks-foundation/locals.tf",
+      "accessCount": 2,
+      "lastAccessed": 1777081548343,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/networking.tf",
+      "accessCount": 2,
+      "lastAccessed": 1777081572151,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
       "accessCount": 1,
-      "lastAccessed": 1777080731411,
+      "lastAccessed": 1777080725244,
       "type": "file"
     },
     {
@@ -155,12 +167,6 @@
       "path": "aks-foundation/log_analytics.tf",
       "accessCount": 1,
       "lastAccessed": 1777080746055,
-      "type": "file"
-    },
-    {
-      "path": "aks-foundation/networking.tf",
-      "accessCount": 1,
-      "lastAccessed": 1777080746853,
       "type": "file"
     },
     {
