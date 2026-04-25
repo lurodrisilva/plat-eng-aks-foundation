@@ -1,6 +1,7 @@
 variable "location" {
   type        = string
-  default     = "westus2"
+  #default     = "westus2"
+  default     = "brazilsouth"
   description = "Location of cluster, if not defined it will be read from the resource-group"
 }
 

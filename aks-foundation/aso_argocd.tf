@@ -33,7 +33,7 @@ resource "kubernetes_secret" "aso_controller_settings" {
   type = "Opaque"
 
   depends_on = [
-    local.namespaces,
+    kubernetes_namespace.namespaces,
     azuread_application_password.crossplane
   ]
 }

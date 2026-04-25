@@ -1,0 +1,306 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777080424106,
+  "projectRoot": "/Users/lucianosilva/src/03-platform-engieeering/03-plat-eng-aks-foundation",
+  "techStack": {
+    "languages": [
+      {
+        "name": "C/C++",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "Makefile"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "make build",
+    "testCommand": "make test",
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": {
+      "defaultBranch": "master",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "aks-foundation": {
+      "path": "aks-foundation",
+      "purpose": null,
+      "fileCount": 26,
+      "lastAccessed": 1777080424098,
+      "keyFiles": [
+        "AppProjectFullSample.yml",
+        "ApplicationFullSample.yml",
+        "LICENSE",
+        "README.md",
+        "aks_addons_argocd.tf"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1777080424098,
+      "keyFiles": [
+        "README.md"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080725244,
+      "type": "file"
+    },
+    {
+      "path": "makefile",
+      "accessCount": 1,
+      "lastAccessed": 1777080725534,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/main.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080730794,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/locals.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080731411,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/providers.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080732050,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/versions.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080732407,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/aks_addons_argocd.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080733560,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/aks_cluster_namespaces.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080733875,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/argocd_public_ingress.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080734628,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/aso_argocd.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080738464,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/crossplane_argocd.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080743418,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/crossplane_infrastructure.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080744099,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/crossplane_managed_resources.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080744905,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/role_assignments.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080745690,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/log_analytics.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080746055,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/networking.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080746853,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/private_dns.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080747618,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/vault.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080747918,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/go.mod",
+      "accessCount": 1,
+      "lastAccessed": 1777080752748,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/unit/unit_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1777080753519,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/e2e/terraform_aks_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1777080754157,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/upgrade/upgrade_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1777080754958,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/unit-test-fixture/alt_locals.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080756097,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/unit-test-fixture/outputs.tf",
+      "accessCount": 1,
+      "lastAccessed": 1777080756998,
+      "type": "file"
+    },
+    {
+      "path": ".devcontainer/devcontainer.json",
+      "accessCount": 1,
+      "lastAccessed": 1777080757394,
+      "type": "file"
+    },
+    {
+      "path": ".checkov_config.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1777080757752,
+      "type": "file"
+    },
+    {
+      "path": "AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080804587,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080852436,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080869513,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/unit/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080877453,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/e2e/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080887673,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/test/upgrade/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080896049,
+      "type": "file"
+    },
+    {
+      "path": "aks-foundation/unit-test-fixture/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080907618,
+      "type": "file"
+    },
+    {
+      "path": "docs/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080916843,
+      "type": "file"
+    },
+    {
+      "path": "docs/setup/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080922328,
+      "type": "file"
+    },
+    {
+      "path": "docs/guides/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080929482,
+      "type": "file"
+    },
+    {
+      "path": "docs/architecture/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080943032,
+      "type": "file"
+    },
+    {
+      "path": "docs/reference/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080946215,
+      "type": "file"
+    },
+    {
+      "path": ".devcontainer/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777080952968,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
