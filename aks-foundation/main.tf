@@ -66,7 +66,7 @@ resource "azurerm_kubernetes_cluster" "main" {
       temporary_name_for_rotation  = var.temporary_name_for_rotation
       type                         = var.agents_type
       ultra_ssd_enabled            = var.ultra_ssd_enabled
-      vnet_subnet_id               = try(var.vnet_subnet.id, null)
+      vnet_subnet_id               = local.aks_default_subnet_id
       zones                        = var.agents_availability_zones
 
       dynamic "kubelet_config" {
@@ -186,7 +186,7 @@ resource "azurerm_kubernetes_cluster" "main" {
       temporary_name_for_rotation  = var.temporary_name_for_rotation
       type                         = var.agents_type
       ultra_ssd_enabled            = var.ultra_ssd_enabled
-      vnet_subnet_id               = try(var.vnet_subnet.id, null)
+      vnet_subnet_id               = local.aks_default_subnet_id
       zones                        = var.agents_availability_zones
 
       dynamic "kubelet_config" {

@@ -31,3 +31,28 @@ resource "azurerm_subnet" "private_endpoints" {
   # Required for private endpoint deployment in this subnet
   private_endpoint_network_policies = "Disabled"
 }
+
+################################################################################
+# Role Assignment - Network Contributor on aks-nodes subnet
+#
+# Grants the AKS cluster identity Network Contributor on the local aks-nodes
+# subnet so AKS can attach NICs for nodes/pods. This is necessary because
+# `var.create_role_assignment_network_contributor` defaults to `false` (so the
+# generic loop in role_assignments.tf is a no-op), but the cluster is now
+# wired to the locally-managed subnet via local.aks_default_subnet_id.
+#
+# Skipped when the caller supplies their own subnet via `var.vnet_subnet` —
+# in that case they are responsible for granting the role themselves (or
+# enabling `var.create_role_assignment_network_contributor`).
+################################################################################
+resource "azurerm_role_assignment" "aks_nodes_subnet_network_contributor" {
+  count = var.vnet_subnet == null ? 1 : 0
+
+  scope                = azurerm_subnet.aks_nodes.id
+  role_definition_name = "Network Contributor"
+  principal_id = coalesce(
+    try(data.azurerm_user_assigned_identity.cluster_identity[0].principal_id, null),
+    try(azurerm_kubernetes_cluster.main.identity[0].principal_id, null),
+    var.client_id
+  )
+}
