@@ -18,7 +18,7 @@
 # Keys as per ASO docs: AZURE_SUBSCRIPTION_ID, AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
 resource "kubernetes_secret" "aso_controller_settings" {
   metadata {
-    name      = "aso-controller-settings"
+    name = "aso-controller-settings"
     # namespace = kubernetes_namespace.aso_namespace.metadata[0].name
     namespace = local.namespaces.resources
   }

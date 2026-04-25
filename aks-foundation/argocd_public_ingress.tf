@@ -10,12 +10,12 @@ resource "azurerm_public_ip" "argocd" {
   sku                 = "Standard"
   # Scope the DNS label by workspace to avoid reservation collisions across envs
   # (Azure holds a DNS label reservation for up to 24h after deletion).
-  domain_name_label   = "${var.argocd_domain_name_label}-${terraform.workspace}"
+  domain_name_label = "${var.argocd_domain_name_label}-${terraform.workspace}"
 
   tags = merge(
     var.tags,
     {
-      "component" = "argocd"
+      "component"  = "argocd"
       "managed-by" = "terraform"
     }
   )
