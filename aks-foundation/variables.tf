@@ -989,8 +989,8 @@ EOT
 
 variable "net_profile_dns_service_ip" {
   type        = string
-  default     = null
-  description = "(Optional) IP address within the Kubernetes service address range that will be used by cluster service discovery (kube-dns). Changing this forces a new resource to be created."
+  default     = "10.100.0.10"
+  description = "(Optional) IP address within the Kubernetes service address range that will be used by cluster service discovery (kube-dns). Changing this forces a new resource to be created. Default lies within `net_profile_service_cidr` (10.100.0.0/16) so it does not overlap with the AKS VNet (10.0.0.0/16)."
 }
 
 variable "net_profile_outbound_type" {
@@ -1007,8 +1007,8 @@ variable "net_profile_pod_cidr" {
 
 variable "net_profile_service_cidr" {
   type        = string
-  default     = null
-  description = "(Optional) The Network Range used by the Kubernetes service. Changing this forces a new resource to be created."
+  default     = "10.100.0.0/16"
+  description = "(Optional) The Network Range used by the Kubernetes service. Changing this forces a new resource to be created. Default (10.100.0.0/16) is outside of the AKS VNet (10.0.0.0/16) to avoid ServiceCidrOverlapExistingSubnetsCidr errors. See https://aka.ms/aks/servicecidroverlap."
 }
 
 variable "network_contributor_role_assigned_subnet_ids" {
